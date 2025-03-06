@@ -11,7 +11,7 @@ const bgimg = new Image();
 bgimg.src = 'https://i.pinimg.com/736x/d1/48/4d/d1484dae779822c963b264fab4790f1e.jpg';
 bgimg.onload = () => c.drawImage(bgimg, 0, 0, canvas.width, canvas.height);
 
-const player = new Character(socket.id, 100, 400);
+//const player = new Character(socket.id, 100, 400);
 let characters = {};
 
 socket.on('currentPlayers', (players) => {

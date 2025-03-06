@@ -9,10 +9,12 @@ const io = new Server(httpServer, { /* options */ });
 app.use(express.static("public"));
 
 let players = {};
-
+var num=0;
 io.on("connection", (socket) => {
     console.log(`Player connected: ${socket.id}`);
-    players[socket.id] = new Character(socket.id, 100, 400);
+    num=Object.keys(players).length;
+    console.log(num);
+    players[socket.id] = new Character(socket.id,num*200,400);
 
     socket.emit('currentPlayers', Object.values(players).map(p => p.serialize()));
     socket.broadcast.emit('newPlayer', players[socket.id].serialize());
@@ -21,7 +23,7 @@ io.on("connection", (socket) => {
         if (players[socket.id]) {
             players[socket.id].move(direction);
             players[socket.id].update(); // Update player position
-            io.emit('updatePlayer', players[socket.id].serialize()); // Sync with clients
+            io.emit('updatePlayer', players[socket.id].serialize()); 
         }
     });
 
