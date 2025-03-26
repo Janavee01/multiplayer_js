@@ -13,23 +13,28 @@ bgimg.onload = () => c.drawImage(bgimg, 0, 0, canvas.width, canvas.height);
 
 //const player = new Character(socket.id, 100, 400);
 let characters = {};
+let myId = null;
 
-socket.on('currentPlayers', (players) => {
+socket.on("currentPlayers", (players) => {
     players.forEach(player => {
-        characters[player.id] = new Character(player.id, player.x, player.y, player.color);
+        let color = (player.id === myId) ? "blue" : "red"; // Self = blue, Opponent = red
+        characters[player.id] = new Character(player.id, player.x, player.y, color);
     });
     drawPlayers();
 });
 
-socket.on('newPlayer', (player) => {
-    characters[player.id] = new Character(player.id, player.x, player.y, player.color);
+// Handle new players joining
+socket.on("newPlayer", (player) => {
+    let color = (player.id === myId) ? "blue" : "red"; // Self = blue, Opponent = red
+    characters[player.id] = new Character(player.id, player.x, player.y, color);
     drawPlayers();
 });
 
-socket.on('updatePlayer', (player) => {
+// Handle player updates
+socket.on("updatePlayer", (player) => {
     if (characters[player.id]) {
-        characters[player.id].x = player.x;  // Update X position
-        characters[player.id].y = player.y;  // Update Y position
+        characters[player.id].x = player.x;
+        characters[player.id].y = player.y;
         drawPlayers();
     }
 });
@@ -70,6 +75,7 @@ function drawPlayers() {
     c.drawImage(bgimg, 0, 0, canvas.width, canvas.height); // Redraw background
 
     for (let id in characters) {
+        characters[id].update(canvas);
         characters[id].draw(c);
     }
 }
@@ -80,7 +86,8 @@ function gameLoop() {
 }
 
 socket.on('connect', () => {
-    console.log("connected socket id", socket.id);
+    myId = socket.id; // Capture the client’s socket ID
+    console.log("Connected socket ID:", myId);
 });
 
 socket.on("playersFull", () => {
