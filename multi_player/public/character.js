@@ -1,18 +1,24 @@
 export default class Character {
-    constructor(id, x, y) {
-        this.id = id;  // Unique player ID
-        this.x = x;     // Character's X position
-        this.y = y;     // Character's Y position
-        this.health = 100;  // Player health
-        this.velocity = { x: 0, y: 0 }; // Movement speed
+    constructor(id, x, y, color = "blue") {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.health = 100;
+        this.velocity = { x: 0, y: 0 };
         this.isAttacking = false;
         this.isBlocking = false;
         this.isDodging = false;
+        this.color = color;
+        this.canJump = true; // Flag to check if the character can jump
+        this.gravity = 0.7; // Normal gravity
+        this.jumpPower = 15; // Power of the jump
+        this.groundY = 576; // Ground level (canvas height - character height)
+        this.height = 180; // Character height
     }
 
-    // Move the character
     move(direction) {
-        const speed = 5;
+        const speed = 7; // Horizontal speed
+
         switch (direction) {
             case 'left':
                 this.velocity.x = -speed;
@@ -21,54 +27,58 @@ export default class Character {
                 this.velocity.x = speed;
                 break;
             case 'up':
-                this.velocity.y = -speed;
-                break;
-            case 'down':
-                this.velocity.y = speed;
-                break;
-            default:
-                this.velocity.x = 0;
-                this.velocity.y = 0;
+                if (this.canJump) { 
+                    this.velocity.y = -this.jumpPower; // Apply jump velocity
+                    this.canJump = false; // Disable jumping mid-air
+                }
                 break;
         }
     }
 
-    draw(c) {
-        c.fillStyle = this.isAttacking ? 'red' : 'blue';
-        c.fillRect(this.x, this.y, 50, 50); // Example square sprite for the player
+    stop(direction) {
+        if (direction === 'left' || direction === 'right') {
+            this.velocity.x = 0; // Stop horizontal movement on key release
+        }
     }
 
-    // Attack action
-    attack() {
-        this.isAttacking = true;
-        setTimeout(() => {
-            this.isAttacking = false;
-        }, 500); // Attack animation duration
-    }
-
-    // Block action
-    block() {
-        this.isBlocking = true;
-        setTimeout(() => {
-            this.isBlocking = false;
-        }, 300); // Block duration
-    }
-
-    // Dodge action
-    dodge() {
-        this.isDodging = true;
-        setTimeout(() => {
-            this.isDodging = false;
-        }, 400); // Dodge duration
-    }
-
-    // Update character position based on velocity
     update() {
+        // Update horizontal movement
         this.x += this.velocity.x;
+
+        // Apply gravity and fall after jump
+        if (this.y + this.height < this.groundY) {
+            this.velocity.y += this.gravity; // Apply gravity while in the air
+        } else {
+            // Stop falling when hitting the ground
+            this.velocity.y = 0;
+            this.y = this.groundY - this.height; // Prevent going below the ground
+            this.canJump = true; // Allow jumping again
+        }
+
+        // Update vertical movement (falling after jump)
         this.y += this.velocity.y;
     }
 
-    // Serialize for sending via sockets
+    draw(c) {
+        c.fillStyle = this.color;
+        c.fillRect(this.x, this.y, 50, 180); // Simple representation of the character
+    }
+
+    attack() {
+        this.isAttacking = true;
+        setTimeout(() => (this.isAttacking = false), 500);
+    }
+
+    block() {
+        this.isBlocking = true;
+        setTimeout(() => (this.isBlocking = false), 300);
+    }
+
+    dodge() {
+        this.isDodging = true;
+        setTimeout(() => (this.isDodging = false), 400);
+    }
+
     serialize() {
         return {
             id: this.id,
@@ -78,6 +88,7 @@ export default class Character {
             isAttacking: this.isAttacking,
             isBlocking: this.isBlocking,
             isDodging: this.isDodging,
+            color: this.color,
         };
     }
 }

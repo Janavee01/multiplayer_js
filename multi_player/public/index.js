@@ -16,19 +16,20 @@ let characters = {};
 
 socket.on('currentPlayers', (players) => {
     players.forEach(player => {
-        characters[player.id] = new Character(player.id, player.x, player.y);
+        characters[player.id] = new Character(player.id, player.x, player.y, player.color);
     });
     drawPlayers();
 });
 
 socket.on('newPlayer', (player) => {
-    characters[player.id] = new Character(player.id, player.x, player.y);
+    characters[player.id] = new Character(player.id, player.x, player.y, player.color);
     drawPlayers();
 });
 
 socket.on('updatePlayer', (player) => {
     if (characters[player.id]) {
-        characters[player.id].update();
+        characters[player.id].x = player.x;  // Update X position
+        characters[player.id].y = player.y;  // Update Y position
         drawPlayers();
     }
 });
@@ -39,11 +40,25 @@ socket.on('removePlayer', (id) => {
 });
 
 document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") socket.emit("move", "left");
-    if (event.key === "ArrowRight") socket.emit("move", "right");
-    if (event.key === "ArrowUp") socket.emit("move", "up");
-    if (event.key === "ArrowDown") socket.emit("move", "down");
-    if (event.key === " ") socket.emit("attack"); // Spacebar for attack
+    let direction = null;
+    switch (event.key) {
+        case "ArrowLeft":
+            direction = "left";
+            break;
+        case "ArrowRight":
+            direction = "right";
+            break;
+        case "ArrowUp":
+            direction = "up";
+            break;
+        case "ArrowDown":
+            direction = "down";
+            break;
+    }
+
+    if (direction) {
+        socket.emit("move", direction);
+    }
 });
 
 document.addEventListener("keyup", () => {
@@ -67,5 +82,10 @@ function gameLoop() {
 socket.on('connect', () => {
     console.log("connected socket id", socket.id);
 });
+
+socket.on("playersFull", () => {
+    alert("Players full! Try again later.");
+});
+
 
 gameLoop();
